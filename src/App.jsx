@@ -1,9 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useLiff, useLocation } from './hooks/useLiff';
-import { getSpotsByLocation } from './services/supabase';
+import { getSpotsByLocation, submitSpotSuggestion } from './services/supabase';
 import { SpotCard } from './components/SpotCard';
 import { SpotDetail } from './components/SpotDetail';
 import { MapView } from './components/MapView';
+import { FilterPanel } from './components/FilterPanel';
+import { SpotSubmission } from './components/SpotSubmission';
+import { SplashScreen } from './components/SplashScreen';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import MapIcon from '@mui/icons-material/Map';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -16,6 +19,8 @@ import LocalCafeIcon from '@mui/icons-material/LocalCafe';
 import WcIcon from '@mui/icons-material/Wc';
 import ListIcon from '@mui/icons-material/List';
 import FamilyRestroomIcon from '@mui/icons-material/FamilyRestroom';
+import FilterListIcon from '@mui/icons-material/FilterList';
+import AddLocationIcon from '@mui/icons-material/AddLocation';
 
 function App() {
   const { isLoggedIn, isLoading: liffLoading, error: liffError, profile } = useLiff();
@@ -24,24 +29,59 @@ function App() {
   const [selectedSpot, setSelectedSpot] = useState(null);
   const [spotsLoading, setSpotsLoading] = useState(false);
   const [viewMode, setViewMode] = useState('list');
+  const [showFilter, setShowFilter] = useState(false);
+  const [showSpotSubmission, setShowSpotSubmission] = useState(false);
+  const [pendingMapView, setPendingMapView] = useState(false);
+  const [filters, setFilters] = useState({
+    distance: 'all',
+    parking: 'all',
+    strollerFriendly: false,
+    nursingRoom: false,
+    diaperChange: false,
+    ageRange: 'all',
+  });
 
   useEffect(() => {
     if (location) {
       fetchSpots();
+      // If user requested map view before location was available
+      if (pendingMapView) {
+        setViewMode('map');
+        setPendingMapView(false);
+      }
     }
-  }, [location]);
+  }, [location, filters]);
 
   const fetchSpots = async () => {
     if (!location) return;
 
     setSpotsLoading(true);
-    const data = await getSpotsByLocation(location.lat, location.lng, 20);
+    const data = await getSpotsByLocation(location.lat, location.lng, 20, filters);
     setSpots(data);
     setSpotsLoading(false);
   };
 
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters);
+  };
+
+  const handleSpotSubmit = async (spotData) => {
+    if (!profile?.userId) {
+      alert('ログインが必要です');
+      return;
+    }
+
+    const result = await submitSpotSuggestion(profile.userId, spotData);
+    if (result.success) {
+      alert('スポット情報を投稿しました。運営による確認後、公開されます。');
+      setShowSpotSubmission(false);
+    } else {
+      alert('投稿に失敗しました。もう一度お試しください。');
+    }
+  };
+
   if (liffLoading) {
-    return <div style={loadingStyle}>LIFF初期化中...</div>;
+    return <SplashScreen />;
   }
 
   if (liffError) {
@@ -49,11 +89,29 @@ function App() {
   }
 
   if (!isLoggedIn) {
-    return <div style={loadingStyle}>ログイン中...</div>;
+    return <SplashScreen />;
   }
 
   if (selectedSpot) {
-    return <SpotDetail spot={selectedSpot} onBack={() => setSelectedSpot(null)} />;
+    return <SpotDetail spot={selectedSpot} onBack={() => setSelectedSpot(null)} userId={profile?.userId} />;
+  }
+
+  if (showFilter) {
+    return (
+      <FilterPanel
+        onFilterChange={handleFilterChange}
+        onClose={() => setShowFilter(false)}
+      />
+    );
+  }
+
+  if (showSpotSubmission) {
+    return (
+      <SpotSubmission
+        onSubmit={handleSpotSubmit}
+        onClose={() => setShowSpotSubmission(false)}
+      />
+    );
   }
 
   return (
@@ -92,11 +150,19 @@ function App() {
               </button>
 
               <button
-                onClick={() => setViewMode('map')}
-                style={secondaryButtonStyle}
+                onClick={async () => {
+                  if (!location) {
+                    setPendingMapView(true);
+                    await getLocation();
+                  } else {
+                    setViewMode('map');
+                  }
+                }}
+                disabled={locationLoading}
+                style={locationLoading ? { ...secondaryButtonStyle, opacity: 0.5, cursor: 'not-allowed' } : secondaryButtonStyle}
               >
                 <MapIcon sx={{ fontSize: 20, marginRight: '8px', verticalAlign: 'middle' }} />
-                マップを見る
+                {locationLoading ? '位置情報取得中...' : 'マップを見る'}
               </button>
             </div>
 
@@ -167,17 +233,26 @@ function App() {
               <>
                 {viewMode === 'list' ? (
                   <div style={{ padding: '16px' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
                       <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>
                         近くのスポット（{spots.length}件）
                       </h2>
-                      <button
-                        onClick={() => setViewMode('map')}
-                        style={mapButtonStyle}
-                      >
-                        <MapIcon sx={{ fontSize: 16, marginRight: '4px', verticalAlign: 'middle' }} />
-                        地図で見る
-                      </button>
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button
+                          onClick={() => setShowFilter(true)}
+                          style={filterButtonStyle}
+                        >
+                          <FilterListIcon sx={{ fontSize: 16, marginRight: '4px', verticalAlign: 'middle' }} />
+                          絞込
+                        </button>
+                        <button
+                          onClick={() => setViewMode('map')}
+                          style={mapButtonStyle}
+                        >
+                          <MapIcon sx={{ fontSize: 16, marginRight: '4px', verticalAlign: 'middle' }} />
+                          地図
+                        </button>
+                      </div>
                     </div>
                     {spots.map((spot) => (
                       <SpotCard key={spot.id} spot={spot} onClick={setSelectedSpot} />
@@ -204,6 +279,17 @@ function App() {
           </>
         )}
       </div>
+
+      {/* Floating Action Button for adding spots */}
+      {location && (
+        <button
+          onClick={() => setShowSpotSubmission(true)}
+          style={fabStyle}
+          title="スポットを追加"
+        >
+          <AddLocationIcon sx={{ fontSize: 28 }} />
+        </button>
+      )}
     </div>
   );
 }
@@ -383,14 +469,26 @@ const emptyStateStyle = {
   textAlign: 'center',
 };
 
+const filterButtonStyle = {
+  padding: '8px 12px',
+  backgroundColor: '#fff',
+  color: '#4CAF50',
+  border: '1px solid #4CAF50',
+  borderRadius: '6px',
+  fontSize: '13px',
+  fontWeight: '600',
+  cursor: 'pointer',
+  whiteSpace: 'nowrap',
+};
+
 const mapButtonStyle = {
-  padding: '8px 16px',
+  padding: '8px 12px',
   backgroundColor: '#4CAF50',
   color: '#fff',
   border: 'none',
   borderRadius: '6px',
-  fontSize: '14px',
-  fontWeight: 'bold',
+  fontSize: '13px',
+  fontWeight: '600',
   cursor: 'pointer',
   whiteSpace: 'nowrap',
 };
@@ -409,6 +507,25 @@ const viewSwitchButtonStyle = {
   fontWeight: 'bold',
   cursor: 'pointer',
   boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+};
+
+const fabStyle = {
+  position: 'fixed',
+  bottom: '24px',
+  right: '24px',
+  width: '64px',
+  height: '64px',
+  borderRadius: '50%',
+  backgroundColor: '#4CAF50',
+  color: '#fff',
+  border: 'none',
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  boxShadow: '0 6px 16px rgba(76, 175, 80, 0.4)',
+  zIndex: 1000,
+  transition: 'all 0.3s ease',
 };
 
 export default App;

@@ -1,8 +1,9 @@
 {
-  "name": "mama-odekake-liff",
+  "name": "mamap",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
+  "description": "ままっぷ - ママのおでかけスポット検索アプリ",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
