@@ -1,5 +1,9 @@
 import { APIProvider, Map, AdvancedMarker, Pin, InfoWindow } from '@vis.gl/react-google-maps';
 import { useState } from 'react';
+import LocalParkingIcon from '@mui/icons-material/LocalParking';
+import BabyChangingStationIcon from '@mui/icons-material/BabyChangingStation';
+import LocalCafeIcon from '@mui/icons-material/LocalCafe';
+import WcIcon from '@mui/icons-material/Wc';
 
 /**
  * マップビューコンポーネント
@@ -87,16 +91,28 @@ export function MapView({ spots, userLocation, onSpotClick }) {
 
                 <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginBottom: '8px' }}>
                   {selectedSpot.parking === '無料' && (
-                    <span style={facilityBadge}>🅿️無料</span>
+                    <span style={facilityBadge}>
+                      <LocalParkingIcon sx={{ fontSize: 14, marginRight: '2px', verticalAlign: 'middle' }} />
+                      無料
+                    </span>
                   )}
                   {selectedSpot.stroller_friendly && (
-                    <span style={facilityBadge}>👶ベビーカー</span>
+                    <span style={facilityBadge}>
+                      <BabyChangingStationIcon sx={{ fontSize: 14, marginRight: '2px', verticalAlign: 'middle' }} />
+                      ベビーカー
+                    </span>
                   )}
                   {selectedSpot.nursing_room && (
-                    <span style={facilityBadge}>🤱授乳室</span>
+                    <span style={facilityBadge}>
+                      <LocalCafeIcon sx={{ fontSize: 14, marginRight: '2px', verticalAlign: 'middle' }} />
+                      授乳室
+                    </span>
                   )}
                   {selectedSpot.diaper_change && (
-                    <span style={facilityBadge}>🚼おむつ台</span>
+                    <span style={facilityBadge}>
+                      <WcIcon sx={{ fontSize: 14, marginRight: '2px', verticalAlign: 'middle' }} />
+                      おむつ台
+                    </span>
                   )}
                 </div>
 

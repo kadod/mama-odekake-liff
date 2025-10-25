@@ -1,3 +1,11 @@
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import LocalParkingIcon from '@mui/icons-material/LocalParking';
+import BabyChangingStationIcon from '@mui/icons-material/BabyChangingStation';
+import LocalCafeIcon from '@mui/icons-material/LocalCafe';
+import WcIcon from '@mui/icons-material/Wc';
+import DirectionsIcon from '@mui/icons-material/Directions';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+
 /**
  * スポット詳細画面
  */
@@ -13,11 +21,16 @@ export function SpotDetail({ spot, onBack }) {
           padding: '8px 16px',
           backgroundColor: '#fff',
           border: '1px solid #ccc',
-          borderRadius: '4px',
+          borderRadius: '8px',
           cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '4px',
+          fontWeight: '600',
         }}
       >
-        ← 戻る
+        <ArrowBackIcon sx={{ fontSize: 18 }} />
+        戻る
       </button>
 
       <div style={{ backgroundColor: '#fff', borderRadius: '8px', padding: '20px' }}>
@@ -30,7 +43,8 @@ export function SpotDetail({ spot, onBack }) {
             {spot.address}
           </p>
           {spot.distance && (
-            <p style={{ margin: '0', color: '#999', fontSize: '14px' }}>
+            <p style={{ margin: '0', color: '#999', fontSize: '14px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <LocationOnIcon sx={{ fontSize: 16 }} />
               現在地から約 {spot.distance.toFixed(1)} km
             </p>
           )}
@@ -42,19 +56,19 @@ export function SpotDetail({ spot, onBack }) {
           </h3>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
             <div style={facilityRow}>
-              <span style={facilityIcon(spot.parking !== 'なし')}>🅿️</span>
+              <LocalParkingIcon sx={{ fontSize: 24, color: spot.parking !== 'なし' ? '#4CAF50' : '#ccc' }} />
               <span>駐車場: {spot.parking}</span>
             </div>
             <div style={facilityRow}>
-              <span style={facilityIcon(spot.stroller_friendly)}>👶</span>
+              <BabyChangingStationIcon sx={{ fontSize: 24, color: spot.stroller_friendly ? '#4CAF50' : '#ccc' }} />
               <span>ベビーカー: {spot.stroller_friendly ? 'OK' : '-'}</span>
             </div>
             <div style={facilityRow}>
-              <span style={facilityIcon(spot.nursing_room)}>🤱</span>
+              <LocalCafeIcon sx={{ fontSize: 24, color: spot.nursing_room ? '#4CAF50' : '#ccc' }} />
               <span>授乳室: {spot.nursing_room ? 'あり' : 'なし'}</span>
             </div>
             <div style={facilityRow}>
-              <span style={facilityIcon(spot.diaper_change)}>🚼</span>
+              <WcIcon sx={{ fontSize: 24, color: spot.diaper_change ? '#4CAF50' : '#ccc' }} />
               <span>おむつ台: {spot.diaper_change ? 'あり' : 'なし'}</span>
             </div>
           </div>
@@ -85,16 +99,22 @@ export function SpotDetail({ spot, onBack }) {
           target="_blank"
           rel="noopener noreferrer"
           style={{
-            display: 'block',
-            padding: '12px 24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            padding: '14px 24px',
             backgroundColor: '#4CAF50',
             color: '#fff',
             textAlign: 'center',
-            borderRadius: '8px',
+            borderRadius: '12px',
             textDecoration: 'none',
             fontWeight: 'bold',
+            fontSize: '16px',
+            boxShadow: '0 4px 12px rgba(76, 175, 80, 0.3)',
           }}
         >
+          <DirectionsIcon sx={{ fontSize: 20 }} />
           Google Mapsでルートを見る
         </a>
       </div>
@@ -105,10 +125,6 @@ export function SpotDetail({ spot, onBack }) {
 const facilityRow = {
   display: 'flex',
   alignItems: 'center',
-  gap: '8px',
+  gap: '12px',
+  padding: '8px 0',
 };
-
-const facilityIcon = (available) => ({
-  fontSize: '20px',
-  opacity: available ? 1 : 0.3,
-});
