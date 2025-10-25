@@ -61,9 +61,12 @@ export async function getSpotsByLocation(lat, lng, radiusKm = 10, filters = {}) 
       ? parseInt(filters.distance)
       : radiusKm;
 
-    return spotsWithDistance
-      .filter(spot => spot.distance <= maxDistance)
-      .sort((a, b) => a.distance - b.distance);
+    // distance: 'all'の場合は距離制限なし
+    const filteredSpots = filters.distance === 'all'
+      ? spotsWithDistance
+      : spotsWithDistance.filter(spot => spot.distance <= maxDistance);
+
+    return filteredSpots.sort((a, b) => a.distance - b.distance);
   } catch (error) {
     console.error('Error fetching spots:', error);
     return [];

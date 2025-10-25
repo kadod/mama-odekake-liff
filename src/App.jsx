@@ -32,6 +32,7 @@ function App() {
   const [showFilter, setShowFilter] = useState(false);
   const [showSpotSubmission, setShowSpotSubmission] = useState(false);
   const [pendingMapView, setPendingMapView] = useState(false);
+  const [showSplash, setShowSplash] = useState(true);
   const [filters, setFilters] = useState({
     distance: 'all',
     parking: 'all',
@@ -51,6 +52,18 @@ function App() {
       }
     }
   }, [location, filters]);
+
+  // Minimum splash screen display time (2 seconds)
+  useEffect(() => {
+    const minDisplayTime = 2000;
+    const timer = setTimeout(() => {
+      if (!liffLoading && isLoggedIn) {
+        setShowSplash(false);
+      }
+    }, minDisplayTime);
+
+    return () => clearTimeout(timer);
+  }, [liffLoading, isLoggedIn]);
 
   const fetchSpots = async () => {
     if (!location) return;
@@ -80,16 +93,12 @@ function App() {
     }
   };
 
-  if (liffLoading) {
+  if (liffLoading || !isLoggedIn || showSplash) {
     return <SplashScreen />;
   }
 
   if (liffError) {
     return <div style={errorStyle}>エラー: {liffError}</div>;
-  }
-
-  if (!isLoggedIn) {
-    return <SplashScreen />;
   }
 
   if (selectedSpot) {
