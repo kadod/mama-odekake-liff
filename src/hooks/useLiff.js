@@ -15,10 +15,14 @@ export function useLiff() {
       try {
         const liffId = import.meta.env.VITE_LIFF_ID;
 
+        console.log('LIFF ID:', liffId);
+        console.log('All env vars:', import.meta.env);
+
         if (!liffId) {
           throw new Error('LIFF ID is not configured. Please set VITE_LIFF_ID in .env');
         }
 
+        console.log('Initializing LIFF with ID:', liffId);
         await liff.init({ liffId });
 
         if (liff.isLoggedIn()) {

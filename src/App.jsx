@@ -3,6 +3,7 @@ import { useLiff, useLocation } from './hooks/useLiff';
 import { getSpotsByLocation } from './services/supabase';
 import { SpotCard } from './components/SpotCard';
 import { SpotDetail } from './components/SpotDetail';
+import { MapView } from './components/MapView';
 
 function App() {
   const { isLoggedIn, isLoading: liffLoading, error: liffError, profile } = useLiff();
@@ -10,6 +11,7 @@ function App() {
   const [spots, setSpots] = useState([]);
   const [selectedSpot, setSelectedSpot] = useState(null);
   const [spotsLoading, setSpotsLoading] = useState(false);
+  const [viewMode, setViewMode] = useState('list');
 
   useEffect(() => {
     if (location) {
@@ -103,14 +105,40 @@ function App() {
                 <p>近くにスポットが見つかりませんでした</p>
               </div>
             ) : (
-              <div style={{ padding: '16px' }}>
-                <h2 style={{ margin: '0 0 16px 0', fontSize: '18px', fontWeight: 'bold' }}>
-                  近くのスポット（{spots.length}件）
-                </h2>
-                {spots.map((spot) => (
-                  <SpotCard key={spot.id} spot={spot} onClick={setSelectedSpot} />
-                ))}
-              </div>
+              <>
+                {viewMode === 'list' ? (
+                  <div style={{ padding: '16px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                      <h2 style={{ margin: 0, fontSize: '18px', fontWeight: 'bold' }}>
+                        近くのスポット（{spots.length}件）
+                      </h2>
+                      <button
+                        onClick={() => setViewMode('map')}
+                        style={mapButtonStyle}
+                      >
+                        🗺️ 地図で見る
+                      </button>
+                    </div>
+                    {spots.map((spot) => (
+                      <SpotCard key={spot.id} spot={spot} onClick={setSelectedSpot} />
+                    ))}
+                  </div>
+                ) : (
+                  <div style={{ position: 'relative', height: 'calc(100vh - 150px)' }}>
+                    <button
+                      onClick={() => setViewMode('list')}
+                      style={viewSwitchButtonStyle}
+                    >
+                      📋 リスト表示
+                    </button>
+                    <MapView
+                      spots={spots}
+                      userLocation={location}
+                      onSpotClick={setSelectedSpot}
+                    />
+                  </div>
+                )}
+              </>
             )}
           </>
         )}
@@ -152,6 +180,34 @@ const errorStyle = {
   color: 'red',
   padding: '20px',
   textAlign: 'center',
+};
+
+const mapButtonStyle = {
+  padding: '8px 16px',
+  backgroundColor: '#4CAF50',
+  color: '#fff',
+  border: 'none',
+  borderRadius: '6px',
+  fontSize: '14px',
+  fontWeight: 'bold',
+  cursor: 'pointer',
+  whiteSpace: 'nowrap',
+};
+
+const viewSwitchButtonStyle = {
+  position: 'absolute',
+  top: '16px',
+  right: '16px',
+  zIndex: 1000,
+  padding: '10px 20px',
+  backgroundColor: '#fff',
+  color: '#333',
+  border: '2px solid #4CAF50',
+  borderRadius: '8px',
+  fontSize: '14px',
+  fontWeight: 'bold',
+  cursor: 'pointer',
+  boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
 };
 
 export default App;
