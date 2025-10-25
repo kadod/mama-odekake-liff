@@ -26,12 +26,14 @@ export function MapView({ spots, userLocation, onSpotClick }) {
 
   return (
     <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
-      <div style={{ width: '100%', height: '100vh' }}>
+      <div style={{ width: '100vw', height: '100vh', position: 'absolute', top: 0, left: 0 }}>
         <Map
           defaultZoom={13}
           defaultCenter={center}
           mapId="mama-odekake-map"
           gestureHandling="greedy"
+          disableDefaultUI={false}
+          zoomControl={true}
         >
           {/* ユーザーの現在地マーカー */}
           {userLocation && (

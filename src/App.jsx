@@ -70,10 +70,28 @@ function App() {
                 fontWeight: 'bold',
                 cursor: locationLoading ? 'not-allowed' : 'pointer',
                 opacity: locationLoading ? 0.6 : 1,
+                marginBottom: '12px',
               }}
             >
               {locationLoading ? '位置情報取得中...' : '現在地で検索'}
             </button>
+            <div>
+              <button
+                onClick={() => setViewMode('map')}
+                style={{
+                  padding: '12px 24px',
+                  backgroundColor: '#fff',
+                  color: '#4CAF50',
+                  border: '2px solid #4CAF50',
+                  borderRadius: '8px',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer',
+                }}
+              >
+                🗺️ マップを見る
+              </button>
+            </div>
             {locationError && <p style={{ color: 'red', marginTop: '12px' }}>{locationError}</p>}
           </div>
         ) : (
@@ -124,7 +142,7 @@ function App() {
                     ))}
                   </div>
                 ) : (
-                  <div style={{ position: 'relative', height: 'calc(100vh - 150px)' }}>
+                  <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }}>
                     <button
                       onClick={() => setViewMode('list')}
                       style={viewSwitchButtonStyle}
