@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useLiff, useLocation } from './hooks/useLiff';
-import { getSpotsByLocation, submitSpotSuggestion } from './services/supabase';
+import { getSpotsByLocation, submitSpotSuggestion, reverseGeocode, geocodeAddress } from './services/supabase';
 import { SpotCard } from './components/SpotCard';
 import { SpotDetail } from './components/SpotDetail';
 import { MapView } from './components/MapView';
 import { FilterPanel } from './components/FilterPanel';
 import { SpotSubmission } from './components/SpotSubmission';
+import { MapPicker } from './components/MapPicker';
 import { SplashScreen } from './components/SplashScreen';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import MapIcon from '@mui/icons-material/Map';
@@ -31,8 +32,10 @@ function App() {
   const [viewMode, setViewMode] = useState('list');
   const [showFilter, setShowFilter] = useState(false);
   const [showSpotSubmission, setShowSpotSubmission] = useState(false);
+  const [showMapPicker, setShowMapPicker] = useState(false);
   const [pendingMapView, setPendingMapView] = useState(false);
   const [showSplash, setShowSplash] = useState(true);
+  const [spotLocationData, setSpotLocationData] = useState(null);
   const [filters, setFilters] = useState({
     distance: 'all',
     parking: 'all',
@@ -88,8 +91,44 @@ function App() {
     if (result.success) {
       alert('スポット情報を投稿しました。運営による確認後、公開されます。');
       setShowSpotSubmission(false);
+      setSpotLocationData(null);
     } else {
       alert('投稿に失敗しました。もう一度お試しください。');
+    }
+  };
+
+  const handleMapLongPress = async (location) => {
+    // 逆ジオコーディングで住所を取得
+    const result = await reverseGeocode(location.lat, location.lng);
+    if (result.success) {
+      setSpotLocationData({
+        lat: location.lat,
+        lng: location.lng,
+        address: result.address,
+      });
+      setShowSpotSubmission(true);
+      setViewMode('list');
+    } else {
+      alert('住所の取得に失敗しました。もう一度お試しください。');
+    }
+  };
+
+  const handleOpenMapPicker = () => {
+    setShowMapPicker(true);
+  };
+
+  const handleMapPickerSelect = async (location) => {
+    // 逆ジオコーディングで住所を取得
+    const result = await reverseGeocode(location.lat, location.lng);
+    if (result.success) {
+      setSpotLocationData({
+        lat: location.lat,
+        lng: location.lng,
+        address: result.address,
+      });
+      setShowMapPicker(false);
+    } else {
+      alert('住所の取得に失敗しました。');
     }
   };
 
@@ -116,10 +155,24 @@ function App() {
 
   if (showSpotSubmission) {
     return (
-      <SpotSubmission
-        onSubmit={handleSpotSubmit}
-        onClose={() => setShowSpotSubmission(false)}
-      />
+      <>
+        <SpotSubmission
+          onSubmit={handleSpotSubmit}
+          onClose={() => {
+            setShowSpotSubmission(false);
+            setSpotLocationData(null);
+          }}
+          initialLocation={spotLocationData}
+          onMapSelect={handleOpenMapPicker}
+        />
+        {showMapPicker && (
+          <MapPicker
+            userLocation={location}
+            onSelect={handleMapPickerSelect}
+            onClose={() => setShowMapPicker(false)}
+          />
+        )}
+      </>
     );
   }
 
@@ -302,6 +355,7 @@ function App() {
                       spots={spots}
                       userLocation={location}
                       onSpotClick={setSelectedSpot}
+                      onMapLongPress={handleMapLongPress}
                     />
                   </div>
                 )}

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import CloseIcon from '@mui/icons-material/Close';
 import SendIcon from '@mui/icons-material/Send';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
+import MapIcon from '@mui/icons-material/Map';
 import LocalParkingIcon from '@mui/icons-material/LocalParking';
 import BabyChangingStationIcon from '@mui/icons-material/BabyChangingStation';
 import LocalCafeIcon from '@mui/icons-material/LocalCafe';
@@ -12,10 +13,10 @@ import LanguageIcon from '@mui/icons-material/Language';
 /**
  * スポット情報投稿フォーム
  */
-export function SpotSubmission({ onSubmit, onClose }) {
+export function SpotSubmission({ onSubmit, onClose, initialLocation, onMapSelect }) {
   const [formData, setFormData] = useState({
     name: '',
-    address: '',
+    address: initialLocation?.address || '',
     description: '',
     parking: 'なし',
     strollerFriendly: false,
@@ -23,6 +24,8 @@ export function SpotSubmission({ onSubmit, onClose }) {
     diaperChange: false,
     phone: '',
     website: '',
+    lat: initialLocation?.lat || null,
+    lng: initialLocation?.lng || null,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -72,14 +75,31 @@ export function SpotSubmission({ onSubmit, onClose }) {
               <LocationOnIcon sx={{ fontSize: 16, marginRight: '4px', verticalAlign: 'middle' }} />
               住所 *
             </label>
-            <input
-              type="text"
-              value={formData.address}
-              onChange={(e) => handleChange('address', e.target.value)}
-              placeholder="例: 東京都渋谷区..."
-              maxLength={200}
-              style={inputStyle}
-            />
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <input
+                type="text"
+                value={formData.address}
+                onChange={(e) => handleChange('address', e.target.value)}
+                placeholder="例: 東京都渋谷区..."
+                maxLength={200}
+                style={{ ...inputStyle, flex: 1 }}
+              />
+              {onMapSelect && (
+                <button
+                  type="button"
+                  onClick={onMapSelect}
+                  style={mapButtonStyle}
+                  title="地図から選択"
+                >
+                  <MapIcon sx={{ fontSize: 20 }} />
+                </button>
+              )}
+            </div>
+            {formData.lat && formData.lng && (
+              <div style={coordinateInfoStyle}>
+                📍 座標: {formData.lat.toFixed(6)}, {formData.lng.toFixed(6)}
+              </div>
+            )}
           </div>
 
           <div style={sectionStyle}>
@@ -396,4 +416,26 @@ const disabledButtonStyle = {
   backgroundColor: '#ccc',
   cursor: 'not-allowed',
   boxShadow: 'none',
+};
+
+const mapButtonStyle = {
+  padding: '12px',
+  backgroundColor: '#2196F3',
+  color: '#fff',
+  border: 'none',
+  borderRadius: '8px',
+  cursor: 'pointer',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  minWidth: '48px',
+};
+
+const coordinateInfoStyle = {
+  marginTop: '8px',
+  fontSize: '12px',
+  color: '#666',
+  backgroundColor: '#f5f5f5',
+  padding: '8px',
+  borderRadius: '6px',
 };

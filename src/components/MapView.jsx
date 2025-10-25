@@ -8,8 +8,10 @@ import WcIcon from '@mui/icons-material/Wc';
 /**
  * マップビューコンポーネント
  */
-export function MapView({ spots, userLocation, onSpotClick }) {
+export function MapView({ spots, userLocation, onSpotClick, onMapLongPress }) {
   const [selectedSpot, setSelectedSpot] = useState(null);
+  const [longPressTimer, setLongPressTimer] = useState(null);
+  const [longPressLocation, setLongPressLocation] = useState(null);
 
   const center = userLocation
     ? { lat: userLocation.lat, lng: userLocation.lng }
@@ -28,6 +30,55 @@ export function MapView({ spots, userLocation, onSpotClick }) {
     onSpotClick(spot);
   };
 
+  // 長押し処理
+  const handleMapClick = (event) => {
+    if (!onMapLongPress) return;
+
+    const latLng = event.detail.latLng;
+    if (!latLng) return;
+
+    // タッチデバイスかマウスデバイスかで処理を分岐
+    const isTouchDevice = 'ontouchstart' in window;
+
+    if (isTouchDevice) {
+      // モバイル: 長押し（500ms）
+      const timer = setTimeout(() => {
+        setLongPressLocation({ lat: latLng.lat, lng: latLng.lng });
+      }, 500);
+      setLongPressTimer(timer);
+    }
+  };
+
+  const handleMapTouchEnd = () => {
+    // 長押しタイマーをキャンセル
+    if (longPressTimer) {
+      clearTimeout(longPressTimer);
+      setLongPressTimer(null);
+    }
+  };
+
+  const handleMapContextMenu = (event) => {
+    // デスクトップ: 右クリック
+    if (!onMapLongPress) return;
+
+    event.preventDefault();
+    const latLng = event.detail.latLng;
+    if (latLng) {
+      setLongPressLocation({ lat: latLng.lat, lng: latLng.lng });
+    }
+  };
+
+  const handleConfirmLocation = () => {
+    if (longPressLocation && onMapLongPress) {
+      onMapLongPress(longPressLocation);
+      setLongPressLocation(null);
+    }
+  };
+
+  const handleCancelLocation = () => {
+    setLongPressLocation(null);
+  };
+
   return (
     <APIProvider apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY}>
       <div style={{ width: '100vw', height: '100vh', position: 'absolute', top: 0, left: 0 }}>
@@ -38,6 +89,9 @@ export function MapView({ spots, userLocation, onSpotClick }) {
           gestureHandling="greedy"
           disableDefaultUI={false}
           zoomControl={true}
+          onClick={handleMapClick}
+          onTouchEnd={handleMapTouchEnd}
+          onContextmenu={handleMapContextMenu}
         >
           {/* ユーザーの現在地マーカー */}
           {userLocation && (
@@ -69,6 +123,17 @@ export function MapView({ spots, userLocation, onSpotClick }) {
               />
             </AdvancedMarker>
           ))}
+
+          {/* 長押し位置の仮マーカー */}
+          {longPressLocation && (
+            <AdvancedMarker position={longPressLocation}>
+              <Pin
+                background="#FF5722"
+                borderColor="#fff"
+                glyphColor="#fff"
+              />
+            </AdvancedMarker>
+          )}
 
           {/* 情報ウィンドウ */}
           {selectedSpot && (
@@ -136,6 +201,25 @@ export function MapView({ spots, userLocation, onSpotClick }) {
             </InfoWindow>
           )}
         </Map>
+
+        {/* 長押し確認ダイアログ */}
+        {longPressLocation && (
+          <div style={longPressDialogStyle}>
+            <div style={longPressDialogContentStyle}>
+              <p style={{ margin: '0 0 16px 0', fontSize: '14px', fontWeight: '600' }}>
+                この位置にスポットを追加しますか？
+              </p>
+              <div style={{ display: 'flex', gap: '8px' }}>
+                <button onClick={handleCancelLocation} style={cancelButtonStyle}>
+                  キャンセル
+                </button>
+                <button onClick={handleConfirmLocation} style={confirmButtonStyle}>
+                  追加する
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </APIProvider>
   );
@@ -155,4 +239,44 @@ const facilityBadge = {
   borderRadius: '4px',
   fontSize: '11px',
   whiteSpace: 'nowrap'
+};
+
+const longPressDialogStyle = {
+  position: 'absolute',
+  bottom: '20px',
+  left: '50%',
+  transform: 'translateX(-50%)',
+  zIndex: 1000,
+};
+
+const longPressDialogContentStyle = {
+  backgroundColor: '#fff',
+  padding: '16px 20px',
+  borderRadius: '12px',
+  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+  minWidth: '280px',
+};
+
+const cancelButtonStyle = {
+  flex: 1,
+  padding: '10px',
+  backgroundColor: '#fff',
+  color: '#666',
+  border: '1px solid #ddd',
+  borderRadius: '8px',
+  fontSize: '14px',
+  fontWeight: '500',
+  cursor: 'pointer',
+};
+
+const confirmButtonStyle = {
+  flex: 1,
+  padding: '10px',
+  backgroundColor: '#4CAF50',
+  color: '#fff',
+  border: 'none',
+  borderRadius: '8px',
+  fontSize: '14px',
+  fontWeight: '600',
+  cursor: 'pointer',
 };

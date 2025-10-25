@@ -327,3 +327,80 @@ export async function getUserSubmissions(userId) {
     return [];
   }
 }
+
+/**
+ * 逆ジオコーディング：座標から住所を取得
+ */
+export async function reverseGeocode(lat, lng) {
+  try {
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    const response = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}&language=ja`
+    );
+
+    if (!response.ok) {
+      throw new Error('Geocoding API request failed');
+    }
+
+    const data = await response.json();
+
+    if (data.status === 'OK' && data.results.length > 0) {
+      return {
+        success: true,
+        address: data.results[0].formatted_address,
+        lat,
+        lng,
+      };
+    } else {
+      return {
+        success: false,
+        error: 'Address not found',
+      };
+    }
+  } catch (error) {
+    console.error('Error reverse geocoding:', error);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+}
+
+/**
+ * ジオコーディング：住所から座標を取得
+ */
+export async function geocodeAddress(address) {
+  try {
+    const apiKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY;
+    const response = await fetch(
+      `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${apiKey}&language=ja`
+    );
+
+    if (!response.ok) {
+      throw new Error('Geocoding API request failed');
+    }
+
+    const data = await response.json();
+
+    if (data.status === 'OK' && data.results.length > 0) {
+      const location = data.results[0].geometry.location;
+      return {
+        success: true,
+        address: data.results[0].formatted_address,
+        lat: location.lat,
+        lng: location.lng,
+      };
+    } else {
+      return {
+        success: false,
+        error: 'Location not found',
+      };
+    }
+  } catch (error) {
+    console.error('Error geocoding address:', error);
+    return {
+      success: false,
+      error: error.message,
+    };
+  }
+}
