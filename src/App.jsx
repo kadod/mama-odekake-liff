@@ -220,15 +220,6 @@ function App() {
                 </div>
                 <p style={{ marginTop: '16px', color: '#666' }}>スポットを検索中...</p>
               </div>
-            ) : spots.length === 0 ? (
-              <div style={emptyStateStyle}>
-                <SearchIcon sx={{ fontSize: 64, color: '#ccc', marginBottom: '16px' }} />
-                <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: '600' }}>スポットが見つかりません</h3>
-                <p style={{ margin: 0, color: '#666', fontSize: '14px' }}>
-                  近くにお出かけスポットがありませんでした。<br />
-                  範囲を広げて再検索してみてください。
-                </p>
-              </div>
             ) : (
               <>
                 {viewMode === 'list' ? (
@@ -254,9 +245,40 @@ function App() {
                         </button>
                       </div>
                     </div>
-                    {spots.map((spot) => (
-                      <SpotCard key={spot.id} spot={spot} onClick={setSelectedSpot} />
-                    ))}
+                    {spots.length === 0 ? (
+                      <div style={emptyStateStyle}>
+                        <SearchIcon sx={{ fontSize: 64, color: '#ccc', marginBottom: '16px' }} />
+                        <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: '600' }}>スポットが見つかりません</h3>
+                        <p style={{ margin: '0 0 16px 0', color: '#666', fontSize: '14px' }}>
+                          近くにお出かけスポットがありませんでした。<br />
+                          地図で周辺を確認してみてください。
+                        </p>
+                        <button
+                          onClick={() => setViewMode('map')}
+                          style={{
+                            padding: '12px 24px',
+                            backgroundColor: '#4CAF50',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '8px',
+                            fontSize: '14px',
+                            fontWeight: '600',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            margin: '0 auto',
+                          }}
+                        >
+                          <MapIcon sx={{ fontSize: 18 }} />
+                          地図を見る
+                        </button>
+                      </div>
+                    ) : (
+                      spots.map((spot) => (
+                        <SpotCard key={spot.id} spot={spot} onClick={setSelectedSpot} />
+                      ))
+                    )}
                   </div>
                 ) : (
                   <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 999 }}>
